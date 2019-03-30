@@ -2,11 +2,15 @@
  * 根据所学的前三小节的知识写一个Demo
  */
 #include <sys/socket.h>
+#include <memory.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <cassert>
 #include <libgen.h>
 #include <iostream>
 #include <signal.h>
+#include <sys/types.h>
 
 using namespace std;
 
@@ -39,8 +43,27 @@ int main(int argc, char ** argv){
 
     //创建IPV4 socket地址
     struct sockaddr_in address;
-    //清空address的内存
+    //将address的内存初始化
     memset(&address, 0, sizeof(address));
 
+    address.sin_family = AF_INET;
+    //将字符串IP地址转换后存储到address里
+    inet_pton(AF_INET, ip, &address.sin_addr);
+    address.sin_port = htons(port);
 
+    int ret = bind(sockfd, (struct sockaddr *)&address, sizeof(address));
+    assert(ret != -1);
+
+    ret = listen(sockfd, backlog);
+    assert(ret != -1);
+
+    //等待连接
+    while (!stop){
+        sleep(1);
+    }
+
+    //程序结束关掉socket
+    close(sockfd);
+
+    return 0;
 }
