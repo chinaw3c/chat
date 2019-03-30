@@ -1,6 +1,6 @@
 /*
- * 根据所学的前三小节的知识写一个Demo
- */
+* 根据所学的前三小节的知识写一个Demo
+*/
 #include <sys/socket.h>
 #include <memory.h>
 #include <unistd.h>
@@ -57,9 +57,33 @@ int main(int argc, char ** argv){
     ret = listen(sockfd, backlog);
     assert(ret != -1);
 
+    //创建连接套接字
+    struct sockaddr_in client;
+    socklen_t client_addrlength = sizeof(client);
+
     //等待连接
     while (!stop){
         sleep(1);
+        //接收连接
+        int connfd = accept(sockfd, (struct sockaddr *)&client, &client_addrlength);
+        if (connfd < 0){
+            //连接失败
+            cout << "[-]Error code is: " << errno << endl;
+            exit(errno);
+        }
+        else{
+            //打印连接后的客户端信息 创建一个ipv4信息大小的数组
+            char remote[INET_ADDRSTRLEN];
+            cout << "[+]Connected with ip: "
+                //将client的sin_addr转换成字符串存储到remote数组中
+                << inet_ntop(AF_INET, &client.sin_addr, remote, INET_ADDRSTRLEN)
+                << "\tport:"
+                //将端口信息转换成数字类型
+                << ntohs(client.sin_port)
+                << endl;
+            //connfd保存的是这次连接的信息 而client保存的则是客户端的信息
+            close(connfd);
+        }
     }
 
     //程序结束关掉socket
